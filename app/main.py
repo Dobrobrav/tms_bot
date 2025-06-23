@@ -1,6 +1,7 @@
 import asyncio
 import json
 import os
+from pathlib import Path
 
 import aiohttp
 import structlog
@@ -11,11 +12,13 @@ from aiogram.fsm.state import StatesGroup, State
 from aiogram.types import Message, FSInputFile
 from dotenv import load_dotenv
 
+load_dotenv(Path(__file__).resolve().parent.parent / '.env')
+
+from app.url import Url
+
 logger = structlog.get_logger(__name__)
 
-load_dotenv()
 API_TOKEN = os.environ['API_TOKEN']
-SERVICE_IP_ADDRESS = os.environ['IP_ADDRESS']
 
 router = Router()
 dp = Dispatcher()
@@ -32,7 +35,7 @@ class GettingUserStates(StatesGroup):
 
 async def main() -> None:
     bot = Bot(API_TOKEN)
-    logger.info('hoping that bot started')
+    logger.info('bot probably started')
     await dp.start_polling(bot)
 
 
@@ -60,15 +63,15 @@ async def username_chosen(message: Message, state: FSMContext) -> None:
     create_user_name = message.text
     async with aiohttp.request(
             method='post',
-            url=f'http://{SERVICE_IP_ADDRESS}/tasks/users/',
+            url=str(Url(endpoint=f'tasks/users/')),
             data={'name': create_user_name},
     ) as response:
         json_response = await response.json()
-        created_user_id = (json_response)['id']
+        created_user_id = json_response['id']
 
     await message.answer(f'user_id: {created_user_id}')
     await state.clear()
-    logger.info(f'user {username_chosen} has been created')
+    logger.info(f'user {create_user_name} has been created')
 
 
 @router.message(Command('get_user'))
@@ -85,15 +88,15 @@ async def user_id_chosen(message: Message, state: FSMContext) -> None:
 
     async with aiohttp.request(
             method='get',
-            url=f'http://{SERVICE_IP_ADDRESS}/tasks/users/{user_id}'
+            url=str(Url(endpoint=f'tasks/users/{user_id}'))
     ) as response:
         user = await response.json()
         logger.info('Got user', user_id=user_id)
 
     await message.answer(
         ('```json\n'
-        f'{json.dumps(user)}\n'
-        '```'),
+         f'{json.dumps(user)}\n'
+         '```'),
         parse_mode='Markdown'
     )
     await state.clear()
