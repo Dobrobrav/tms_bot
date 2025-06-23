@@ -1,3 +1,3 @@
 #!/bin/sh
 
-docker build . -t bot && docker run bot
+docker build --pull --tag bot . && docker run --name bot_container bot
