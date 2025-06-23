@@ -14,7 +14,7 @@ from dotenv import load_dotenv
 
 load_dotenv(Path(__file__).resolve().parent.parent / '.env')
 
-from app.url import Url
+from url import Url
 
 logger = structlog.get_logger(__name__)
 

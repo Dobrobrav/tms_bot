@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from app import constants
+import constants
 
 
 @dataclass(frozen=True)
