@@ -8,8 +8,7 @@ from dotenv import load_dotenv
 
 load_dotenv(dotenv_path=(Path(__file__).resolve().parent.parent / '.env'))
 
-from app import start_controllers, user_controllers
-from app.user_controllers import CreatingUserStates, GettingUserStates
+import start_controllers, user_controllers
 
 import structlog
 import sys
@@ -69,13 +68,13 @@ router.message(CommandStart())(
 router.message(Command('create_user'))(
     user_controllers.create_user
 )
-router.message(CreatingUserStates.waiting_for_username)(
+router.message(user_controllers.CreatingUserStates.waiting_for_username)(
     user_controllers.username_chosen
 )
 router.message(Command('get_user'))(
     user_controllers.get_user
 )
-router.message(GettingUserStates.waiting_for_user_id)(
+router.message(user_controllers.GettingUserStates.waiting_for_user_id)(
     user_controllers.user_id_chosen
 )
 

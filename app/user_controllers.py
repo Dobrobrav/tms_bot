@@ -6,7 +6,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.types import Message
 
-from app.url import Url
+from url import Url
 
 logger = structlog.get_logger(__name__)
 
