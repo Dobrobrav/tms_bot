@@ -1,20 +1,59 @@
 import asyncio
-import json
 import os
 from pathlib import Path
 
-import aiohttp
-import structlog
 from aiogram import Bot, Dispatcher, Router
 from aiogram.filters import CommandStart, Command
-from aiogram.fsm.context import FSMContext
-from aiogram.fsm.state import StatesGroup, State
-from aiogram.types import Message, FSInputFile
 from dotenv import load_dotenv
 
-load_dotenv(Path(__file__).resolve().parent.parent / '.env')
+load_dotenv(dotenv_path=(Path(__file__).resolve().parent.parent / '.env'))
 
-from url import Url
+from app import start_controllers, user_controllers
+from app.user_controllers import CreatingUserStates, GettingUserStates
+
+import structlog
+import sys
+from datetime import datetime
+
+# ANSI escape-коды
+RESET = "\033[0m"
+COLORS = {
+    "critical": "\033[1;31m",
+    "error": "\033[31m",
+    "warning": "\033[33m",
+    "info": "\033[32m",
+    "debug": "\033[36m",
+}
+KEY_COLOR = "\033[36m"
+VAL_COLOR = "\033[35m"
+TIME_COLOR = "\033[90m"  # тёмно-серый
+
+
+def custom_renderer(_, __, event_dict):
+    level = event_dict.pop("level", "info").lower()
+    ts = datetime.now().isoformat(timespec="seconds")
+
+    color = COLORS.get(level, "")
+    parts = [
+        f"{TIME_COLOR}{ts}{RESET}",
+        f"{color}[{level:<8}]{RESET}",
+    ]
+
+    for key, value in event_dict.items():
+        parts.append(f"{KEY_COLOR}{key}{RESET}={VAL_COLOR}{value}{RESET}")
+
+    return " ".join(parts)
+
+
+structlog.configure(
+    processors=[
+        structlog.stdlib.add_log_level,
+        custom_renderer,
+    ],
+    logger_factory=structlog.PrintLoggerFactory(file=sys.stdout),
+)
+
+log = structlog.get_logger()
 
 logger = structlog.get_logger(__name__)
 
@@ -24,82 +63,27 @@ router = Router()
 dp = Dispatcher()
 dp.include_router(router)
 
-
-class CreatingUserStates(StatesGroup):
-    waiting_for_username = State()
-
-
-class GettingUserStates(StatesGroup):
-    waiting_for_user_id = State()
+router.message(CommandStart())(
+    start_controllers.welcome
+)
+router.message(Command('create_user'))(
+    user_controllers.create_user
+)
+router.message(CreatingUserStates.waiting_for_username)(
+    user_controllers.username_chosen
+)
+router.message(Command('get_user'))(
+    user_controllers.get_user
+)
+router.message(GettingUserStates.waiting_for_user_id)(
+    user_controllers.user_id_chosen
+)
 
 
 async def main() -> None:
     bot = Bot(API_TOKEN)
-    logger.info('bot probably started')
+    logger.info('bot (probably) started')
     await dp.start_polling(bot)
-
-
-@router.message(CommandStart())
-async def welcome(message: Message) -> None:
-    logger.info('sending welcome message')
-    await message.answer_photo(FSInputFile('./images/kenobi.png'))
-    logger.info('welcome message sent')
-
-
-@router.message(Command('create_user'))
-async def create_user(message: Message, state: FSMContext) -> None:
-    logger.info('create_user: starting command')
-
-    await state.set_state(CreatingUserStates.waiting_for_username)
-    await message.answer('Please enter user_name')
-
-
-@router.message(
-    CreatingUserStates.waiting_for_username,
-)
-async def username_chosen(message: Message, state: FSMContext) -> None:
-    logger.info('username chosen')
-
-    create_user_name = message.text
-    async with aiohttp.request(
-            method='post',
-            url=str(Url(endpoint=f'tasks/users/')),
-            data={'name': create_user_name},
-    ) as response:
-        json_response = await response.json()
-        created_user_id = json_response['id']
-
-    await message.answer(f'user_id: {created_user_id}')
-    await state.clear()
-    logger.info(f'user {create_user_name} has been created')
-
-
-@router.message(Command('get_user'))
-async def get_user(message: Message, state: FSMContext) -> None:
-    logger.info('starting command', command='get_user')
-    await state.set_state(GettingUserStates.waiting_for_user_id)
-    await message.answer('Please enter user_id')
-
-
-@router.message(GettingUserStates.waiting_for_user_id)
-async def user_id_chosen(message: Message, state: FSMContext) -> None:
-    user_id = message.text
-    logger.info('Getting user', user_id=user_id)
-
-    async with aiohttp.request(
-            method='get',
-            url=str(Url(endpoint=f'tasks/users/{user_id}'))
-    ) as response:
-        user = await response.json()
-        logger.info('Got user', user_id=user_id)
-
-    await message.answer(
-        ('```json\n'
-         f'{json.dumps(user)}\n'
-         '```'),
-        parse_mode='Markdown'
-    )
-    await state.clear()
 
 
 if __name__ == '__main__':
