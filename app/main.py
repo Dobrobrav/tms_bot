@@ -2,11 +2,14 @@ import asyncio
 import os
 from pathlib import Path
 
-from aiogram import Bot, Dispatcher, Router
-from aiogram.filters import CommandStart, Command
 from dotenv import load_dotenv
 
 load_dotenv(dotenv_path=(Path(__file__).resolve().parent.parent / '.env'))
+
+from aiogram import Bot, Dispatcher, Router
+from aiogram.filters import CommandStart, Command
+
+import task_controllers
 
 import start_controllers, user_controllers
 
@@ -56,6 +59,10 @@ log = structlog.get_logger()
 
 logger = structlog.get_logger(__name__)
 
+# --------------------------------------------------------------------------------------
+# --------------------------------------------------------------------------------------
+# --------------------------------------------------------------------------------------
+
 API_TOKEN = os.environ['API_TOKEN']
 
 router = Router()
@@ -65,6 +72,8 @@ dp.include_router(router)
 router.message(CommandStart())(
     start_controllers.welcome
 )
+
+# user
 router.message(Command('create_user'))(
     user_controllers.create_user
 )
@@ -76,6 +85,26 @@ router.message(Command('get_user'))(
 )
 router.message(user_controllers.GettingUserStates.waiting_for_user_id)(
     user_controllers.user_id_chosen
+)
+
+# task
+router.message(Command('create_task'))(
+    task_controllers.create_task
+)
+router.message(task_controllers.CreatingTaskStates.waiting_for_title)(
+    task_controllers.title_chosen
+)
+router.message(task_controllers.CreatingTaskStates.waiting_for_description)(
+    task_controllers.description_chosen
+)
+router.message(task_controllers.CreatingTaskStates.waiting_for_reporter_id)(
+    task_controllers.reporter_id_chosen
+)
+router.message(task_controllers.CreatingTaskStates.waiting_for_assignee_id)(
+    task_controllers.assignee_id_chosen
+)
+router.message(task_controllers.CreatingTaskStates.waiting_for_related_task_ids)(
+    task_controllers.related_task_ids_chosen
 )
 
 

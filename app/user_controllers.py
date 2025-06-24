@@ -7,6 +7,7 @@ from aiogram.fsm.state import StatesGroup, State
 from aiogram.types import Message
 
 from url import Url
+from utils import make_pretty_json_in_telegram
 
 logger = structlog.get_logger(__name__)
 
@@ -61,9 +62,7 @@ async def user_id_chosen(message: Message, state: FSMContext) -> None:
         logger.info('Got user', user_id=user_id)
 
     await message.answer(
-        ('```json\n'
-         f'{json.dumps(user)}\n'
-         '```'),
+        make_pretty_json_in_telegram(json.dumps(user)),
         parse_mode='Markdown'
     )
     await state.clear()
