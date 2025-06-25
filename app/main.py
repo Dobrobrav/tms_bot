@@ -1,18 +1,17 @@
 import asyncio
-import os
 from pathlib import Path
 
 from dotenv import load_dotenv
 
-from start_handlers import start_router
-
 load_dotenv(dotenv_path=(Path(__file__).resolve().parent.parent / '.env'))
+
+from start_handlers import start_router, bot, setup_bot_commands
 
 from user_handlers import user_router
 from task_handlers import task_router
 from comment_handlers import comment_router
 
-from aiogram import Bot, Dispatcher
+from aiogram import Dispatcher
 
 import structlog
 import sys
@@ -60,18 +59,17 @@ log = structlog.get_logger()
 
 logger = structlog.get_logger(__name__)
 
-# --------------------------------------------------------------------------------------
-# --------------------------------------------------------------------------------------
-# --------------------------------------------------------------------------------------
 
-API_TOKEN = os.environ['API_TOKEN']
+# --------------------------------------------------------------------------------------
+# --------------------------------------------------------------------------------------
+# --------------------------------------------------------------------------------------
 
 
 async def main() -> None:
     dp = Dispatcher()
     dp.include_routers(start_router, user_router, task_router, comment_router)
-    bot = Bot(API_TOKEN)
     logger.info('bot (probably) started')
+    await setup_bot_commands(bot)
     await dp.start_polling(bot)
 
 

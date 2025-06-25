@@ -25,6 +25,8 @@ class GettingUserStates(StatesGroup):
 
 @user_router.message(Command('create_user'))
 async def create_user(message: Message, state: FSMContext) -> None:
+    await state.clear()
+
     logger.info('create_user: starting command')
 
     await state.set_state(CreatingUserStates.waiting_for_username)
@@ -55,6 +57,8 @@ async def username_chosen(message: Message, state: FSMContext) -> None:
 
 @user_router.message(Command('get_user'))
 async def get_user(message: Message, state: FSMContext) -> None:
+    await state.clear()
+
     logger.info('starting command', command='get_user')
     await state.set_state(GettingUserStates.waiting_for_user_id)
     await message.answer('Please enter user_id')

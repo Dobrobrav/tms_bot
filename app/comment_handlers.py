@@ -24,6 +24,8 @@ class CreateCommentStates(StatesGroup):
 
 @comment_router.message(Command('create_comment'))
 async def create_comment(message: Message, state: FSMContext) -> None:
+    await state.clear()
+
     logger.info('start command', command='create_comment')
 
     await state.set_state(CreateCommentStates.waiting_for_text)
@@ -85,6 +87,8 @@ class GetCommentStates(StatesGroup):
 
 @comment_router.message(Command('get_comment'))
 async def get_comment(message: Message, state: FSMContext) -> None:
+    await state.clear()
+
     logger.info('start command', command='get_comment')
 
     await state.set_state(GetCommentStates.waiting_for_comment_id)

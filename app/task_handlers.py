@@ -26,6 +26,8 @@ class CreatingTaskStates(StatesGroup):
 
 @task_router.message(Command('create_task'))
 async def create_task(message: Message, state: FSMContext) -> None:
+    await state.clear()
+
     logger.info('start creating task')
     await state.set_state(CreatingTaskStates.waiting_for_title)
     await message.answer('Enter task title')
@@ -118,6 +120,8 @@ class GettingTaskStates(StatesGroup):
 
 @task_router.message(Command('get_task'))
 async def get_task(message: Message, state: FSMContext) -> None:
+    await state.clear()
+
     logger.info('starting command', command='get_task')
     await state.set_state(GettingTaskStates.waiting_for_task_id)
     await message.answer('Enter task id')
