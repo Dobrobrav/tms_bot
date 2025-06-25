@@ -133,6 +133,11 @@ async def task_id_chosen(message: Message, state: FSMContext) -> None:
             'get',
             url=str(Url(endpoint=f'tasks/tasks/{task_id}')),
     ) as response:
-        json_data = await response.json()
-        await message.answer(utils.make_pretty_json_in_telegram(json_data), parse_mode='Markdown')
+        if response.status == 200:
+            json_data = await response.json()
+            await message.answer(utils.make_pretty_json_in_telegram(json_data), parse_mode='Markdown')
+        else:
+            response_text = await response.text()
+            await message.answer(response_text)
+
         await state.clear()

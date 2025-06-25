@@ -9,8 +9,8 @@ from start_handlers import start_router
 load_dotenv(dotenv_path=(Path(__file__).resolve().parent.parent / '.env'))
 
 from user_handlers import user_router
-
 from task_handlers import task_router
+from comment_handlers import comment_router
 
 from aiogram import Bot, Dispatcher
 
@@ -69,7 +69,7 @@ API_TOKEN = os.environ['API_TOKEN']
 
 async def main() -> None:
     dp = Dispatcher()
-    dp.include_routers(start_router, user_router, task_router)
+    dp.include_routers(start_router, user_router, task_router, comment_router)
     bot = Bot(API_TOKEN)
     logger.info('bot (probably) started')
     await dp.start_polling(bot)
