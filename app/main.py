@@ -4,14 +4,15 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
+from start_handlers import start_router
+
 load_dotenv(dotenv_path=(Path(__file__).resolve().parent.parent / '.env'))
 
-from aiogram import Bot, Dispatcher, Router
-from aiogram.filters import CommandStart, Command
+from user_handlers import user_router
 
-import task_controllers
+from task_handlers import task_router
 
-import start_controllers, user_controllers
+from aiogram import Bot, Dispatcher
 
 import structlog
 import sys
@@ -65,50 +66,10 @@ logger = structlog.get_logger(__name__)
 
 API_TOKEN = os.environ['API_TOKEN']
 
-router = Router()
-dp = Dispatcher()
-dp.include_router(router)
-
-router.message(CommandStart())(
-    start_controllers.welcome
-)
-
-# user
-router.message(Command('create_user'))(
-    user_controllers.create_user
-)
-router.message(user_controllers.CreatingUserStates.waiting_for_username)(
-    user_controllers.username_chosen
-)
-router.message(Command('get_user'))(
-    user_controllers.get_user
-)
-router.message(user_controllers.GettingUserStates.waiting_for_user_id)(
-    user_controllers.user_id_chosen
-)
-
-# task
-router.message(Command('create_task'))(
-    task_controllers.create_task
-)
-router.message(task_controllers.CreatingTaskStates.waiting_for_title)(
-    task_controllers.title_chosen
-)
-router.message(task_controllers.CreatingTaskStates.waiting_for_description)(
-    task_controllers.description_chosen
-)
-router.message(task_controllers.CreatingTaskStates.waiting_for_reporter_id)(
-    task_controllers.reporter_id_chosen
-)
-router.message(task_controllers.CreatingTaskStates.waiting_for_assignee_id)(
-    task_controllers.assignee_id_chosen
-)
-router.message(task_controllers.CreatingTaskStates.waiting_for_related_task_ids)(
-    task_controllers.related_task_ids_chosen
-)
-
 
 async def main() -> None:
+    dp = Dispatcher()
+    dp.include_routers(start_router, user_router, task_router)
     bot = Bot(API_TOKEN)
     logger.info('bot (probably) started')
     await dp.start_polling(bot)
