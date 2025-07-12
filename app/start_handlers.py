@@ -40,7 +40,8 @@ async def setup_bot_commands(bot: Bot):
         BotCommand(command="get_user", description="Получить пользователя"),
         BotCommand(command="create_task", description="Создать задачу"),
         BotCommand(command="get_task", description="Получить задачу"),
-        BotCommand(command="create_comment", description="Получить комментарий"),
+        BotCommand(command="create_comment", description="Создать комментарий"),
         BotCommand(command="get_comment", description="Получить комментарий"),
+        BotCommand(command="add_attachment_to_task", description="Добавить вложение к задаче"),
     ]
     await bot.set_my_commands(commands)
