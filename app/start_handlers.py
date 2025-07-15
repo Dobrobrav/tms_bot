@@ -18,7 +18,7 @@ async def welcome(message: Message, state: FSMContext, bot: Bot) -> None:
     await state.clear()
 
     logger.info('sending welcome message')
-    await message.answer_photo(FSInputFile(Path(__file__).resolve().parent / 'images' / 'kenobi.png'))
+    await message.answer_photo(FSInputFile(Path(__file__).resolve().parent / 'images' / 'hello.jpg'))
     logger.info('welcome message sent')
 
     commands = await bot.get_my_commands()
